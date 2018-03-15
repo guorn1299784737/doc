@@ -1,0 +1,53 @@
+安装mysql5.7
+安装地址：
+http://www.cnblogs.com/thinkingandworkinghard/p/7813504.html（ubuntu16.0.4安装mysql5.7以及设置远程访问）
+http://www.jb51.net/article/100211.htm（Mysql 5.7 忘记root密码或重置密码的详细方法）
+https://segmentfault.com/a/1190000008430798（创建用户）
+
+1.安装mysql命令
+sudo apt-get install mysql-server
+sudo apt-get install mysql-client
+sudo apt-get install libmysqlclient-dev
+
+2.安装成功后可以通过下面的命令测试是否安装成功
+sudo netstat -tap | grep mysql
+
+3.进入mysql
+mysql -uroot -p
+
+如果忘记密码了，可以先跳过密码登录进去，然后重新设置。
+编辑mysql的配置文件/etc/mysql/mysql.conf.d/mysqld.cnf，在[mysqld]段下加入一行“skip-grant-tables”。
+重启mysql服务： mysql service restart;或者 systemctl restart mysql.service
+
+进入 mysql -uroot -p ;
+切换数据库 user mysql;
+执行update mysql.user set authentication_string=password('123456') where user='root' and Host ='localhost';把密码重置为123456。退出数据库管理。
+立即刷新权限：flush privileges
+退出后mysql: quit;
+回到sudo gedit /etc/mysql/mysql.conf.d/mysqld.cnf，把刚才加入的那一行“skip-grant-tables”注释或删除掉。
+再次重启mysql服务sudo service mysql restart，使用新的密码登陆，修改成功。
+
+3.让mysql可以远程访问
+ 首先编辑文件/etc/mysql/mysql.conf.d/mysqld.cnf：
+ 注释bind-address=127.0.0.1
+ 保存退出，然后进入mysql服务，执行授权命令：
+ 将root用户授权给所以连接：grant all privileges on *.* to 'root'@'%' identified by 'xxxxxx';
+ 最后一个为mysql密码​
+ 让权限立即生效：flush privileges;​
+
+ 到此所以操作完成，可以在任何主机连接此mysql数据库服务器了。
+
+ 可能会遇到防火墙的问题造成无法访问，把3306端口加入防火墙
+
+ 常用命令：
+ mysql service restart|start|stop
+ sudo /etc/init.d/mysql restart|start|stop
+
+ 创建本地用户
+ CREATE USER 'myuser'@'localhost' IDENTIFIED BY 'mypass';
+ GRANT ALL ON *.* TO 'myuser'@'localhost';
+
+ 创建远程用户
+ CREATE USER 'myuser'@'%' IDENTIFIED BY 'mypass';
+ GRANT ALL ON *.* TO 'myuser'@'%';
+

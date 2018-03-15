@@ -1,0 +1,86 @@
+安装ftp
+
+安装地址：
+https://www.cnblogs.com/dupengcheng/p/6790143.html
+
+1.安装vsftpd软件包
+sudo apt-get install vsftpd
+2.打开配置文件
+vim /etc/vsftpd.conf
+3.修改参数
+一些参数可以去掉注释激活，为了方便，你也可以注释全部，然后添加下面的设置
+
+《复制代码》
+#这些设置系统默认是开启的，可以不管
+listen=NO
+listen_ipv6=YES
+dirmessage_enable=YES
+use_localtime=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+
+#下面的就要自定义设置了，建议系统默认的不管，然后复制下面的
+
+#是否允许匿名访问，NO为不允许
+anonymous_enable=NO
+#是否允许本地用户访问,就是linux本机中存在的用户，YES允许
+local_enable=YES
+#是否开启写模式，YES为开启
+write_enable=YES
+#新建文件权限，一般设置为022，那么新建后的文件的权限就是777-022=755
+local_umask=022
+
+#是否启动userlist为通过模式，YES的话只有存在于userlist文件中的用户才能登录ftp（可以理解为userlist是一个白名单），NO的话，白名单失效，和下面一个参数配合使用
+userlist_enable=YES
+#是否启动userlist为禁止模式，YES表示在userlist中的用户禁止登录ftp（黑名单），NO表示黑名单失效，我们已经让userlist作为一个白名单，所以无需使用黑名单功能
+userlist_deny=NO
+#指定哪个文件作为userlist文件，我们稍后编辑这个文件
+userlist_file=/etc/vsftpd.user_list
+
+#是否限制本地所有用户切换根目录的权限，YES为开启限制，即登录后的用户不能访问ftp根目录以外的目录，当然要限制啦
+chroot_local_user=YES
+#是否启动限制用户的名单list为允许模式，上面的YES限制了所有用户，可以用这个名单作为白名单，作为例外允许访问ftp根目录以外
+chroot_list_enable=YES
+#设置哪个文件是list文件，里面的用户将不受限制的去访问ftp根目录以外的目录
+chroot_list_file=/etc/vsftpd.chroot_list
+#是否开启写模式，开启后可以进行创建文件夹等写入操作
+allow_writeable_chroot=YES
+
+#设置ftp根目录的位置,这个文件我们稍后自己创建
+local_root=/var/myftp
+《复制代码》
+
+重启vsftpd
+sudo /etc/init.d/vsftpd restart
+
+4.添加ftp用户
+顺便将将用户目录设置为我们上面的ftp根目录
+sudo useradd -d /var/myftp ftpuser
+设置用户密码
+sudo passwd ftpuser
+5.创建需要的文件，设置文件夹权限
+上面我们指定了两个文件，userlist文件和list文件，有时候系统不会自动创建，你要自己创建
+vim /etc/vsftpd.user_list
+然后添加ftpuser进去作为白名单的一员
+vim /etc/vsftpd.chroot_list
+设为空即可
+创建用户文件夹，设置权限
+mkdir /var/myftp
+权限设置可以根据你的使用场景来设置，我这里在根目录下禁止此用户写，然后下面建两个文件夹，一个download只允许读取，upload允许写和读
+创建目录
+
+最后检查一下文件所有者，都改为ftpuser
+
+6.使用ftp，解决各种问题
+linux访问输入ftp 加 你的IP
+ftp xxx.xxx.xxx.xxx
+输入用户名ftpuser和密码
+如果登录出现530错误：
+vim /etc/pam.d/vsftpd
+注释掉#auth   required    pam_shells.so
+然后ls一下，如果失败了，切换到被动模式即可
+passive mode
+然后mkdir一下发现无法创建文件夹 550 create directory operation failed
+setsebool -P ftpd_disable_trans on
+/etc/init.d/vsftpd restart
+即可

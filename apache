@@ -1,0 +1,24 @@
+apache2
+安装地址：
+http://www.jb51.net/article/112541.htm（apache2服务器的搭建和配置步骤详解）
+
+
+常用命令：
+启动/停止/重启：/etc/init.d/apache2 start/stop/restart
+主配置文件：/etc/apache2/apache2.conf
+
+配置虚拟域名：
+复制/etc/apache2/sites-enabled/000-default.conf到/etc/apache2/sites-enabled目录下
+删除里面内容，新增下面内容
+<VirtualHost *:80>
+        ServerName www.lvyou.org
+        #ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/lyfw
+</VirtualHost>
+然后执行下面语句，关联文件
+sudo ln -s /etc/apache2/sites-available/linyupark /etc/apache2/sites-enabled/linyupark
+
+重启web服务
+/etc/init.d/apache2 restart
+
+
